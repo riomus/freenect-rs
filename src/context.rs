@@ -1,10 +1,11 @@
 use ffi::*;
-use utils::catch_error_code;
+use utils::{catch_error_code, catch_error_code_positive};
 use attributes::DeviceAttributes;
 use std::ops::Drop;
 use std::ptr::null_mut;
 use std::mem::uninitialized;
 
+#[derive(PartialEq, Eq, Debug)]
 pub enum StatusCode {
     Success,
     Failure,
@@ -37,7 +38,7 @@ impl Context {
     pub fn process_events (&mut self) -> StatusCode {
         unsafe {
             let result = freenect_process_events (self.ptr);
-            catch_error_code (result)
+            catch_error_code_positive (result)
         }
     }
 

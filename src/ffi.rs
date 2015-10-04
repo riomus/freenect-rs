@@ -36,7 +36,7 @@ impl Default for FreenectDeviceAttributes {
 }
 
 #[repr(C)]
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Debug)]
 pub enum FreenectResolution {
     LOW    = 0,
     MEDIUM = 1,
@@ -45,7 +45,7 @@ pub enum FreenectResolution {
 }
 
 #[repr(C)]
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Debug)]
 pub enum FreenectVideoFormat {
     RGB             = 0,
     BAYER           = 1,
@@ -88,7 +88,7 @@ pub enum FreenectFlagValue {
 }
 
 #[repr(C)]
-#[derive(Copy)]
+#[derive(Copy, Debug)]
 pub struct FreenectFrameMode {
     pub reserved: uint32_t,
     pub resolution: FreenectResolution,
@@ -113,6 +113,12 @@ impl FreenectFrameMode {
     pub unsafe fn depth_format(&mut self) -> *mut FreenectDepthFormat {
         let raw: *mut u8 = transmute(&self._bindgen_data_1_);
         transmute(raw.offset(0))
+    }
+    pub fn find_video_mode (res : FreenectResolution, fmt : FreenectVideoFormat) -> FreenectFrameMode {
+        unsafe { freenect_find_video_mode (res, fmt) }
+    }
+    pub fn get_video_mode (n : isize) -> FreenectFrameMode {
+        unsafe { freenect_get_video_mode (n as i32) }
     }
 }
 impl Clone for FreenectFrameMode {

@@ -4,9 +4,16 @@ use std::ffi::{CStr, CString};
 
 pub fn catch_error_code (value : i32) -> StatusCode {
     match value {
-        0 | 10 => StatusCode::Success,
+        0  => StatusCode::Success,
         x @ _ if x < 0 => StatusCode::Failure,
         _ => unreachable! (),
+    }
+}
+
+pub fn catch_error_code_positive (value : i32) -> StatusCode {
+    match value {
+        x @ _ if x >= 0 => StatusCode::Success,
+        _ => StatusCode::Failure,
     }
 }
 

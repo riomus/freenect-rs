@@ -105,14 +105,34 @@ impl Device {
             catch_error_code (result)
         }
     }
+
+    pub fn get_current_video_mode (&self) -> FreenectFrameMode {
+        unsafe { freenect_get_current_video_mode (self.ptr) }
+    }
+
+    pub fn set_video_mode (&mut self, mode : FreenectFrameMode) -> StatusCode {
+        unsafe {
+            let result = freenect_set_video_mode (self.ptr, mode);
+
+            catch_error_code (result)
+        }
+    }
+
+    pub fn set_video_buffer <'a, 'b> (&'a mut self, buffer : &'b mut [u8; 640*480*3]) -> StatusCode
+        where 'a : 'b {
+        unsafe {
+            let result = freenect_set_video_buffer (self.ptr, buffer as *mut _ as *mut c_void);
+            catch_error_code (result)
+        }
+    }
 }
 
 #[derive(Debug)]
 #[repr(C, packed)]
 pub struct RGBPacket {
-    r : u8,
-    g : u8,
-    b : u8,
+    pub r : u8,
+    pub g : u8,
+    pub b : u8,
 }
 
 pub type RGBArray <'a> = &'a mut [RGBPacket; 640*480];

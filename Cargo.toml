@@ -9,11 +9,12 @@ piston = "0.12.0"
 piston2d-graphics = "0.10.0"
 pistoncore-glutin_window = "0.14.0"
 piston2d-opengl_graphics = "0.14.0"
+image = "0.3.14"
 
 [lib]
 name = "freenect"
 path = "src/lib.rs"
 
 [[bin]]
-name = "test"
-path = "tests/test.rs"
+name = "example"
+path = "examples/main.rs"
