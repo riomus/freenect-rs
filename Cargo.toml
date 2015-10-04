@@ -1,0 +1,19 @@
+[package]
+name = "libfreenect"
+version = "0.1.0"
+authors = ["Sebastian Garrido <sebasgarcep@gmail.com>"]
+
+[dependencies]
+libc = "0.1.10"
+piston = "0.12.0"
+piston2d-graphics = "0.10.0"
+pistoncore-glutin_window = "0.14.0"
+piston2d-opengl_graphics = "0.14.0"
+
+[lib]
+name = "freenect"
+path = "src/lib.rs"
+
+[[bin]]
+name = "test"
+path = "tests/test.rs"
