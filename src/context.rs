@@ -1,5 +1,6 @@
 use ffi::*;
-use utils::{catch_error_code, catch_error_code_positive};
+use traits::MutPtrWrapper;
+use utils::catch_error_code_positive;
 use attributes::DeviceAttributes;
 use std::ops::Drop;
 use std::ptr::null_mut;
@@ -15,8 +16,24 @@ pub struct Context {
     pub ptr : FreenectContext,
 }
 
+pub struct ContextNoDrop {
+    pub ptr : FreenectContext,
+}
+
 pub struct USBContext {
     pub ptr : FreenectUSBContext,
+}
+
+impl MutPtrWrapper<FreenectContext> for Context {
+    fn ptr (&self) -> FreenectContext {
+        self.ptr
+    }
+}
+
+impl MutPtrWrapper<FreenectContext> for ContextNoDrop {
+    fn ptr (&self) -> FreenectContext {
+        self.ptr
+    }
 }
 
 impl Context {
@@ -34,27 +51,33 @@ impl Context {
                 0 => Some (Context { ptr : ptr }) )
         }
     }
+}
 
-    pub fn process_events (&mut self) -> StatusCode {
+impl ContextDefault for Context {}
+
+impl ContextDefault for ContextNoDrop {}
+
+pub trait ContextDefault : MutPtrWrapper<FreenectContext> {
+    fn process_events (&mut self) -> StatusCode {
         unsafe {
-            let result = freenect_process_events (self.ptr);
+            let result = freenect_process_events (self.ptr ());
             catch_error_code_positive (result)
         }
     }
 
-    pub fn num_devices (&self) -> Option<usize> {
+    fn num_devices (&self) -> Option<usize> {
         unsafe {
-            let result = freenect_num_devices (self.ptr);
+            let result = freenect_num_devices (self.ptr ());
 
             catch_error! (result;
                 x @ _ if x >= 0 => Some (x as usize))
         }
     }
 
-    pub fn list_device_attributes (&self) -> Option<Vec<DeviceAttributes>> {
+    fn list_device_attributes (&self) -> Option<Vec<DeviceAttributes>> {
         unsafe {
             let mut list = uninitialized ();
-            let result = freenect_list_device_attributes (self.ptr, &mut list);
+            let result = freenect_list_device_attributes (self.ptr (), &mut list);
 
             catch_error! (result;
                 x @ _ if x >= 0 =>
@@ -66,9 +89,9 @@ impl Context {
         }
     }
 
-    pub fn enabled_subdevices (&self) -> Vec<FreenectDeviceFlags> {
+    fn enabled_subdevices (&self) -> Vec<FreenectDeviceFlags> {
         unsafe {
-            let result = freenect_enabled_subdevices (self.ptr) as u8;
+            let result = freenect_enabled_subdevices (self.ptr ()) as u8;
 
             let mut vec = Vec::new ();
             switch_freenect_device_flags! (result;
@@ -80,7 +103,7 @@ impl Context {
         }
     }
 
-    pub fn select_subdevices (&mut self, flags : Vec<FreenectDeviceFlags>) {
+    fn select_subdevices (&mut self, flags : Vec<FreenectDeviceFlags>) {
         let mut total_flag = 0;
 
         for key in flags {
@@ -88,12 +111,12 @@ impl Context {
         }
 
         unsafe {
-            freenect_select_subdevices (self.ptr, total_flag as i32);
+            freenect_select_subdevices (self.ptr (), total_flag as i32);
         }
     }
 
-    pub fn set_log_level (&mut self, log_level : FreenectLogLevel) {
-        unsafe { freenect_set_log_level (self.ptr, log_level); }
+    fn set_log_level (&mut self, log_level : FreenectLogLevel) {
+        unsafe { freenect_set_log_level (self.ptr (), log_level); }
     }
 }
 
@@ -101,12 +124,13 @@ impl Context {
 macro_rules! freenect_set_log_callback {
     ($context:ident, fn $cb_id:ident ($log_level_id:ident : FreenectLogLevel, $str_id:ident : &str) $body:block) => {
 
-        extern fn $cb_id (dev                          : FreenectContext,
-                          $log_level_id                : FreenectLogLevel,
-                          $str_id                      : *const libc::c_char) {
+        extern fn $cb_id ($context      : FreenectContext,
+                          $log_level_id : FreenectLogLevel,
+                          $str_id       : *const libc::c_char) {
             unsafe {
                 let $str_id = $crate::utils::const_c_to_string ($str_id);
-                $body
+                let $context = $crate::context::ContextNoDrop { ptr: $context };
+                $body;
             }
         }
 
@@ -114,7 +138,6 @@ macro_rules! freenect_set_log_callback {
         unsafe { freenect_set_log_callback ($context.ptr, Some ($cb_id)); }
     };
 }
-
 
 impl Drop for Context {
     fn drop (&mut self) {

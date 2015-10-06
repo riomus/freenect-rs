@@ -1,25 +1,19 @@
-#[macro_use]
-extern crate freenect;
+#[macro_use] extern crate freenect;
 extern crate libc;
-extern crate piston;
-extern crate graphics;
-extern crate glutin_window;
-extern crate opengl_graphics;
-extern crate image;
+extern crate piston_window;
+extern crate image as im;
+extern crate gfx_device_gl;
 
+mod app;
+
+use app::App;
+use std::thread;
+use std::sync::mpsc::{Sender, channel};
 use freenect::ffi::*;
-use freenect::context::{Context, StatusCode};
-use freenect::device::{Device, RGBArray};
-use opengl_graphics::{GlGraphics, OpenGL};
-use piston::window::WindowSettings;
-use glutin_window::GlutinWindow;
-use piston::event_loop::*;
-use piston::input::*;
-
-mod paint;
+use freenect::context::{Context, ContextDefault, StatusCode};
+use freenect::device::{Device, DeviceDefault, RGBArray};
 
 fn main () {
-
     let mut context = Context::init (None).unwrap ();
 
     context.set_log_level (FreenectLogLevel::DEBUG);
@@ -28,7 +22,7 @@ fn main () {
         println! ("[LOG_LEVEL {:?}] {}", log_level, m);
     });
 
-    context.select_subdevices(vec![FreenectDeviceFlags::CAMERA, FreenectDeviceFlags::MOTOR]);
+    context.select_subdevices(vec![FreenectDeviceFlags::CAMERA]);
 
     let n = context.num_devices ().unwrap ();
 
@@ -38,8 +32,18 @@ fn main () {
 
     let mut buffer = [0; 640*480*3];
 
-    freenect_set_video_callback! (dev, fn callback (array : RGBArray, timestamp: u32) {
-        pass_to_paint_thread (array);
+    let (mut sender, receiver) = channel::<&mut RGBArray> ();
+
+    thread::spawn (|| {
+        let mut app = App::new ();
+        app.init (receiver);
+    });
+
+    dev.set_user_data (&mut sender);
+
+    freenect_set_video_callback! (dev, fn callback (array : &mut RGBArray, timestamp: u32) {
+        let sender = dev.get_user_data::<Sender<&mut RGBArray>> ();
+        sender.send (array);
     });
 
     dev.set_tilt_degs (0 as f64);
@@ -51,8 +55,4 @@ fn main () {
 
     while context.process_events () == StatusCode::Success {
     }
-}
-
-fn pass_to_paint_thread (array : RGBArray) {
-
 }
