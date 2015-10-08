@@ -102,6 +102,7 @@ pub trait ContextDefault : MutPtrWrapper<FreenectContext> {
 macro_rules! freenect_set_log_callback {
     ($context:ident, fn $cb_id:ident ($log_level_id:ident : FreenectLogLevel, $str_id:ident : &str) $body:block) => {
 
+        #[allow(unused_variables)]
         extern fn $cb_id ($context      : FreenectContext,
                           $log_level_id : FreenectLogLevel,
                           $str_id       : *const libc::c_char) {

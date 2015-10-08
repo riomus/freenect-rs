@@ -134,6 +134,7 @@ pub trait DeviceDefault : MutPtrWrapper<FreenectDevice> {
 macro_rules! freenect_set_video_callback {
     ($device:ident, fn $cb_id:ident ($video_id:ident : &mut $buffer_type:ty, $timestamp_id:ident : u32) $body:block) => {
 
+        #[allow(unused_variables)]
         extern fn $cb_id ($device       : FreenectDevice,
                           $video_id     : *mut libc::c_void,
                           $timestamp_id : u32) {
@@ -143,7 +144,6 @@ macro_rules! freenect_set_video_callback {
                 $body
             }
         }
-
 
         unsafe { freenect_set_video_callback ($device.ptr, Some ($cb_id)); }
     };
