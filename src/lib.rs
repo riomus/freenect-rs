@@ -1,8 +1,8 @@
 extern crate libc;
 
-#[macro_use]
-pub mod utils;
-pub mod traits;
+#[macro_use] pub mod utils;
+#[macro_use] pub mod traits;
+pub mod buffer;
 pub mod info;
 pub mod ffi;
 pub mod attributes;

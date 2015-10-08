@@ -12,29 +12,11 @@ pub enum StatusCode {
     Failure,
 }
 
-pub struct Context {
-    pub ptr : FreenectContext,
-}
+generate_mut_ptr_wrapper! (Context : FreenectContext; ContextDefault);
 
-pub struct ContextNoDrop {
-    pub ptr : FreenectContext,
-}
+generate_mut_ptr_wrapper! (ContextNoDrop : FreenectContext; ContextDefault);
 
-pub struct USBContext {
-    pub ptr : FreenectUSBContext,
-}
-
-impl MutPtrWrapper<FreenectContext> for Context {
-    fn ptr (&self) -> FreenectContext {
-        self.ptr
-    }
-}
-
-impl MutPtrWrapper<FreenectContext> for ContextNoDrop {
-    fn ptr (&self) -> FreenectContext {
-        self.ptr
-    }
-}
+generate_mut_ptr_wrapper! (USBContext : FreenectUSBContext;);
 
 impl Context {
     pub fn init (usb_ctx : Option<USBContext>) -> Option<Context> {
@@ -52,10 +34,6 @@ impl Context {
         }
     }
 }
-
-impl ContextDefault for Context {}
-
-impl ContextDefault for ContextNoDrop {}
 
 pub trait ContextDefault : MutPtrWrapper<FreenectContext> {
     fn process_events (&mut self) -> StatusCode {

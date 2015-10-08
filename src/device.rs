@@ -1,4 +1,5 @@
 use ffi::*;
+use buffer::Buffer;
 use traits::MutPtrWrapper;
 use libc::c_void;
 use utils::{str_to_const_c, catch_error_code};
@@ -6,25 +7,9 @@ use context::{Context, StatusCode};
 use std::ops::Drop;
 use std::mem::uninitialized;
 
-pub struct Device {
-    pub ptr : FreenectDevice,
-}
+generate_mut_ptr_wrapper! (Device : FreenectDevice; DeviceDefault);
 
-pub struct DeviceNoDrop {
-    pub ptr : FreenectDevice,
-}
-
-impl MutPtrWrapper<FreenectDevice> for Device {
-    fn ptr (&self) -> FreenectDevice {
-        self.ptr
-    }
-}
-
-impl MutPtrWrapper<FreenectDevice> for DeviceNoDrop {
-    fn ptr (&self) -> FreenectDevice {
-        self.ptr
-    }
-}
+generate_mut_ptr_wrapper! (DeviceNoDrop : FreenectDevice; DeviceDefault);
 
 impl Device {
     pub fn open_device (context : &Context, index : isize) -> Option<Device> {
@@ -51,10 +36,6 @@ impl Device {
         }
     }
 }
-
-impl DeviceDefault for Device {}
-
-impl DeviceDefault for DeviceNoDrop {}
 
 pub trait DeviceDefault : MutPtrWrapper<FreenectDevice> {
     fn set_user_data <'a, 'b, T> (&'a mut self, user_data : &'b mut T)
@@ -140,34 +121,24 @@ pub trait DeviceDefault : MutPtrWrapper<FreenectDevice> {
         }
     }
 
-    fn set_video_buffer <'a, 'b> (&'a mut self, buffer : &'b mut [u8; 640*480*3]) -> StatusCode
-        where 'a : 'b {
+    fn set_video_buffer <'a, 'b, B> (&'a mut self, buffer : &'b mut B) -> StatusCode
+        where 'a : 'b, B : Buffer {
         unsafe {
-            let result = freenect_set_video_buffer (self.ptr (), buffer as *mut _ as *mut c_void);
+            let result = freenect_set_video_buffer (self.ptr (), buffer.to_unsafe ());
             catch_error_code (result)
         }
     }
 }
 
-#[derive(Debug)]
-#[repr(C, packed)]
-pub struct RGBPacket {
-    pub r : u8,
-    pub g : u8,
-    pub b : u8,
-}
-
-pub type RGBArray = [RGBPacket; 640*480];
-
 #[macro_export]
 macro_rules! freenect_set_video_callback {
-    ($device:ident, fn $cb_id:ident ($video_id:ident : &mut RGBArray, $timestamp_id:ident : u32) $body:block) => {
+    ($device:ident, fn $cb_id:ident ($video_id:ident : &mut $buffer_type:ty, $timestamp_id:ident : u32) $body:block) => {
 
         extern fn $cb_id ($device       : FreenectDevice,
                           $video_id     : *mut libc::c_void,
                           $timestamp_id : u32) {
             unsafe {
-                let $video_id = &mut *($video_id as *mut [$crate::device::RGBPacket; 640*480]);
+                let $video_id = &mut *($video_id as *mut $buffer_type);
                 let $device = $crate::device::DeviceNoDrop { ptr: $device };
                 $body
             }

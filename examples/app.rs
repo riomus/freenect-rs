@@ -1,4 +1,4 @@
-use freenect::device::RGBArray;
+use freenect::buffer::RGBBufferVideoMedium;
 use im::{ImageBuffer, Rgba};
 use piston_window::*;
 use std::thread;
@@ -38,7 +38,7 @@ impl App {
         }
     }
 
-    pub fn init (&self, receiver : Receiver<&mut RGBArray>) {
+    pub fn init (&self, receiver : Receiver<&mut RGBBufferVideoMedium>) {
         for e in self.window.clone() {
             e.draw_2d(|c, g| {
                 let texture = self.texture.borrow ();
@@ -53,7 +53,7 @@ impl App {
         }
     }
 
-    pub fn update_buffer (canvas : &mut ImageBuffer<Rgba<u8> ,Vec<u8>>, array : &mut RGBArray) {
+    pub fn update_buffer (canvas : &mut ImageBuffer<Rgba<u8> ,Vec<u8>>, array : &mut RGBBufferVideoMedium) {
         for (color, pixel) in array.iter ().zip (canvas.pixels_mut ()) {
             let color : [u8; 4] = [color.r, color.g, color.b, 255];
             *pixel = Rgba (color);
