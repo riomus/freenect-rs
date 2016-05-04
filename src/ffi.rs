@@ -117,6 +117,9 @@ impl FreenectFrameMode {
     pub fn find_video_mode (res : FreenectResolution, fmt : FreenectVideoFormat) -> FreenectFrameMode {
         unsafe { freenect_find_video_mode (res, fmt) }
     }
+    pub fn find_depth_mode (res : FreenectResolution, fmt : FreenectDepthFormat) -> FreenectFrameMode {
+        unsafe { freenect_find_depth_mode (res, fmt) }
+    }
     pub fn get_video_mode (n : isize) -> FreenectFrameMode {
         unsafe { freenect_get_video_mode (n as i32) }
     }

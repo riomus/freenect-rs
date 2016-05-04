@@ -8,7 +8,14 @@ pub struct RGBPacket {
     pub b : u8,
 }
 
+#[derive(Debug, Clone, Copy, Default)]
+#[repr(C, packed)]
+pub struct DepthPacket {
+    pub d : u16
+}
+
 pub type RGBBufferVideoMedium = [RGBPacket; 640*480];
+pub type DepthBufferVideoMedium = [DepthPacket; 640*480];
 
 pub trait Buffer {
     fn new () -> Self;
@@ -22,5 +29,11 @@ pub trait Buffer {
 impl Buffer for RGBBufferVideoMedium {
     fn new () -> Self {
         [RGBPacket::default (); 640*480]
+    }
+}
+
+impl Buffer for DepthBufferVideoMedium {
+    fn new () -> Self {
+        [DepthPacket::default (); 640*480]
     }
 }

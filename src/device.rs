@@ -121,10 +121,26 @@ pub trait DeviceDefault : MutPtrWrapper<FreenectDevice> {
         }
     }
 
+    fn set_depth_mode (&mut self, mode : FreenectFrameMode) -> StatusCode {
+        unsafe {
+            let result = freenect_set_depth_mode (self.ptr (), mode);
+            catch_error_code (result)
+        }
+    }
+
     fn set_video_buffer <'a, 'b, B> (&'a mut self, buffer : &'b mut B) -> StatusCode
         where 'a : 'b, B : Buffer {
         unsafe {
             let result = freenect_set_video_buffer (self.ptr (), buffer.to_unsafe ());
+            catch_error_code (result)
+        }
+    }
+
+
+    fn set_depth_buffer <'a, 'b, B> (&'a mut self, buffer : &'b mut B) -> StatusCode
+        where 'a : 'b, B : Buffer {
+        unsafe {
+            let result = freenect_set_depth_buffer (self.ptr (), buffer.to_unsafe ());
             catch_error_code (result)
         }
     }
@@ -146,6 +162,24 @@ macro_rules! freenect_set_video_callback {
         }
 
         unsafe { freenect_set_video_callback ($device.ptr, Some ($cb_id)); }
+    };
+}
+#[macro_export]
+macro_rules! freenect_set_depth_callback {
+    ($device:ident, fn $cb_id:ident ($video_id:ident : &mut $buffer_type:ty, $timestamp_id:ident : u32) $body:block) => {
+
+        #[allow(unused_variables)]
+        extern fn $cb_id ($device       : FreenectDevice,
+                          $video_id     : *mut libc::c_void,
+                          $timestamp_id : u32) {
+            unsafe {
+                let $video_id = &mut *($video_id as *mut $buffer_type);
+                let $device = $crate::device::DeviceNoDrop { ptr: $device };
+                $body
+            }
+        }
+
+        unsafe { freenect_set_depth_callback ($device.ptr, Some ($cb_id)); }
     };
 }
 

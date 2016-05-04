@@ -4,17 +4,8 @@ version = "0.1.0"
 authors = ["Sebastian Garrido <sebasgarcep@gmail.com>"]
 
 [dependencies]
-libc = "0.1.10"
-piston = "0.13.0"
-piston_window = "0.23.0"
-image = "0.3.14"
-piston2d-graphics = "0.10.0"
-piston2d-opengl_graphics = "0.14.1"
+libc = "0.2.11"
 
 [lib]
 name = "freenect"
 path = "src/lib.rs"
-
-[[bin]]
-name = "example"
-path = "examples/main.rs"
