@@ -183,6 +183,25 @@ macro_rules! freenect_set_depth_callback {
     };
 }
 
+#[macro_export]
+macro_rules! freenect_set_depth_callback_block {
+    ($device:ident, $next:expr) => {
+
+        #[allow(unused_variables)]
+        extern fn depth_callback($device       : FreenectDevice,
+            video_id     : *mut libc::c_void,
+            timestamp_id : u32) {
+            unsafe {
+                let video_id = &mut *(video_id as *mut DepthBufferVideoMedium);
+                let $device = $crate::device::DeviceNoDrop { ptr: $device };
+                $next(video_id,video_id,timestamp_id)
+            }
+        }
+
+        unsafe { freenect_set_depth_callback ($device.ptr, Some (depth_callback)); }
+    };
+}
+
 impl Drop for Device {
     fn drop (&mut self) {
         unsafe { freenect_close_device (self.ptr) };
