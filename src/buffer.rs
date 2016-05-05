@@ -1,5 +1,5 @@
 use libc::c_void;
-
+use std::convert::From;
 #[derive(Debug, Clone, Copy, Default)]
 #[repr(C, packed)]
 pub struct RGBPacket {
@@ -37,3 +37,15 @@ impl Buffer for DepthBufferVideoMedium {
         [DepthPacket::default (); 640*480]
     }
 }
+
+struct DepthBufferVideoMediumWrap(DepthBufferVideoMedium);
+
+impl From<*mut c_void> for DepthBufferVideoMediumWrap{
+    fn from(data: *mut c_void) -> DepthBufferVideoMediumWrap{
+        unsafe{
+        let out=&mut *(data as *mut DepthBufferVideoMedium);
+        DepthBufferVideoMediumWrap(* out)
+        }
+    }
+}
+
