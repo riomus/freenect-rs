@@ -38,13 +38,13 @@ impl Buffer for DepthBufferVideoMedium {
     }
 }
 
-struct DepthBufferVideoMediumWrap(DepthBufferVideoMedium);
+pub struct DepthBufferVideoMediumWrap(&'static mut DepthBufferVideoMedium);
 
 impl From<*mut c_void> for DepthBufferVideoMediumWrap{
     fn from(data: *mut c_void) -> DepthBufferVideoMediumWrap{
         unsafe{
         let out=&mut *(data as *mut DepthBufferVideoMedium);
-        DepthBufferVideoMediumWrap(* out)
+        DepthBufferVideoMediumWrap(out)
         }
     }
 }
