@@ -194,7 +194,7 @@ macro_rules! freenect_set_depth_callback_block {
             unsafe {
                 let video_id = &mut *(video_id as *mut DepthBufferVideoMedium);
                 let $device = $crate::device::DeviceNoDrop { ptr: $device };
-                $next(video_id,video_id,timestamp_id)
+                $next(video_id,timestamp_id)
             }
         }
 
