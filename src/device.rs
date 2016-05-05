@@ -164,6 +164,7 @@ macro_rules! freenect_set_video_callback {
         unsafe { freenect_set_video_callback ($device.ptr, Some ($cb_id)); }
     };
 }
+
 #[macro_export]
 macro_rules! freenect_set_depth_callback {
     ($device:ident, fn $cb_id:ident ($video_id:ident : &mut $buffer_type:ty, $timestamp_id:ident : u32) $body:block) => {
@@ -192,7 +193,7 @@ macro_rules! freenect_set_depth_callback_block {
             video_id     : *mut libc::c_void,
             timestamp_id : u32) {
             unsafe {
-                let video_id = &mut *(video_id as *mut DepthBufferVideoMedium);
+                let video_id = From::from(video_id);
                 let $device = $crate::device::DeviceNoDrop { ptr: $device };
                 $next(video_id,timestamp_id)
             }
